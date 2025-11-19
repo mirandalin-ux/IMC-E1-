@@ -1,0 +1,1691 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IMC E1上市策略仪表盘</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Anker SOLIX 品牌色 */
+            --primary-blue: #00B4DB;
+            --primary-teal: #00D4AA;
+            --primary-dark: #0083B0;
+            --solix-gradient: linear-gradient(135deg, #00D4AA 0%, #00B4DB 50%, #0083B0 100%);
+
+            /* 辅助色 */
+            --primary-gold: #f59e0b;
+            --success-green: #00D4AA;
+            --warning-yellow: #fbbf24;
+            --danger-red: #ef4444;
+
+            /* 背景色 */
+            --dark-bg: #0083B0;
+            --light-bg: #f0fdfb;
+            --card-bg: #ffffff;
+
+            /* 文字色 */
+            --text-primary: #0f172a;
+            --text-secondary: #64748b;
+
+            /* 边框色 */
+            --border-color: #d1f4ed;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: var(--light-bg);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        /* Navigation */
+        .top-navbar {
+            background: var(--solix-gradient);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0, 180, 219, 0.3);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .logo {
+            font-size: 2rem;
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 0.5rem;
+            list-style: none;
+        }
+
+        .nav-link {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: white;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .nav-link:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .nav-link.active {
+            background: rgba(255,255,255,0.3);
+            font-weight: 600;
+        }
+
+        .project-status {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            font-size: 0.875rem;
+        }
+
+        .current-week {
+            font-weight: 600;
+            color: #FFFFFF;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        .last-update {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.75rem;
+        }
+
+        /* Main Content */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page {
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Cards */
+        .card {
+            background: var(--card-bg);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0, 180, 219, 0.1);
+            border: 1px solid var(--border-color);
+        }
+
+        .card-header {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+        }
+
+        /* Grid */
+        .grid {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .grid-2 {
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        }
+
+        .grid-3 {
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        }
+
+        .grid-4 {
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        }
+
+        /* Stats */
+        .stat-card {
+            background: var(--solix-gradient);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0, 180, 219, 0.3);
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 0.5rem 0;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            opacity: 0.9;
+        }
+
+        /* Progress Bar */
+        .progress-bar {
+            height: 1rem;
+            background: var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+            margin: 0.5rem 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--solix-gradient);
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 0.5rem;
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        /* Badge */
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background: rgba(0, 212, 170, 0.15);
+            color: #00866D;
+            border: 1px solid #00D4AA;
+        }
+
+        .badge-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-danger {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        /* Timeline */
+        .timeline {
+            position: relative;
+            padding-left: 2rem;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--border-color);
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-bottom: 2rem;
+        }
+
+        .timeline-marker {
+            position: absolute;
+            left: -2.375rem;
+            width: 1rem;
+            height: 1rem;
+            border-radius: 50%;
+            background: var(--primary-blue);
+            border: 3px solid white;
+            box-shadow: 0 0 0 2px var(--border-color);
+        }
+
+        .timeline-marker.completed {
+            background: var(--success-green);
+        }
+
+        .timeline-marker.current {
+            background: var(--primary-teal);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 2px var(--border-color), 0 0 0 4px rgba(0, 212, 170, 0.3); }
+            50% { box-shadow: 0 0 0 2px var(--border-color), 0 0 0 8px rgba(0, 212, 170, 0.1); }
+        }
+
+        .timeline-content {
+            background: var(--card-bg);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .timeline-date {
+            font-weight: 600;
+            color: var(--primary-blue);
+            margin-bottom: 0.5rem;
+        }
+
+        /* Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+        }
+
+        th {
+            background: var(--light-bg);
+            padding: 0.75rem;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        td {
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        tr:hover {
+            background: var(--light-bg);
+        }
+
+        /* Segment Cards */
+        .segment-card {
+            border-left: 4px solid var(--primary-teal);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .segment-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 180, 219, 0.2);
+        }
+
+        .segment-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .segment-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .segment-budget {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-blue);
+            margin: 0.5rem 0;
+        }
+
+        .segment-desc {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Status Indicator */
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-dot {
+            width: 0.75rem;
+            height: 0.75rem;
+            border-radius: 50%;
+        }
+
+        .status-dot.green {
+            background: var(--success-green);
+        }
+
+        .status-dot.yellow {
+            background: var(--warning-yellow);
+        }
+
+        .status-dot.red {
+            background: var(--danger-red);
+        }
+
+        /* Segment Timeline Matrix */
+        .segment-timeline-matrix {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 0.875rem;
+        }
+
+        .segment-timeline-matrix th {
+            background: white;
+            color: black;
+            padding: 1rem;
+            text-align: center;
+            font-weight: 600;
+            border: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 5;
+        }
+
+        .segment-timeline-matrix th:first-child {
+            background: var(--solix-gradient);
+            color: white;
+        }
+
+        .segment-timeline-matrix td {
+            border: 1px solid var(--border-color);
+            padding: 0;
+            vertical-align: top;
+        }
+
+        .matrix-cell {
+            padding: 0.75rem;
+            min-height: 100px;
+            background: white;
+        }
+
+        .matrix-cell.highlight {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            position: relative;
+        }
+
+        .matrix-cell.highlight::before {
+            content: '★';
+            position: absolute;
+            top: 0.25rem;
+            right: 0.25rem;
+            color: var(--primary-gold);
+            font-size: 1.25rem;
+        }
+
+        .action-item {
+            padding: 0.5rem;
+            margin-bottom: 0.5rem;
+            background: var(--light-bg);
+            border-radius: 0.375rem;
+            border-left: 3px solid var(--primary-teal);
+            font-size: 0.8125rem;
+            line-height: 1.4;
+            transition: all 0.2s;
+        }
+
+        .action-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .action-item:hover {
+            transform: translateX(2px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .action-item.urgent {
+            border-left-color: var(--danger-red);
+            background: #fee2e2;
+            font-weight: 600;
+        }
+
+        .action-item.priority {
+            border-left-color: var(--primary-gold);
+            background: #fef3c7;
+            font-weight: 600;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .top-navbar {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .nav-menu {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .container {
+                padding: 1rem;
+            }
+
+            .grid-2, .grid-3, .grid-4 {
+                grid-template-columns: 1fr;
+            }
+
+            .segment-timeline-matrix {
+                font-size: 0.75rem;
+            }
+
+            .segment-timeline-matrix th,
+            .segment-timeline-matrix td {
+                padding: 0.5rem;
+            }
+
+            .action-item {
+                padding: 0.375rem;
+                font-size: 0.75rem;
+            }
+        }
+
+        /* Health Dashboard */
+        .health-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .health-card {
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            border: 2px solid;
+        }
+
+        .health-card.healthy {
+            border-color: var(--success-green);
+            background: rgba(0, 212, 170, 0.1);
+        }
+
+        .health-card.attention {
+            border-color: var(--warning-yellow);
+            background: #fef3c7;
+        }
+
+        .health-card.risk {
+            border-color: var(--danger-red);
+            background: #fee2e2;
+        }
+
+        .health-percent {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 0.5rem 0;
+        }
+
+        /* KPI Table */
+        .kpi-table {
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        .kpi-table th {
+            background: var(--primary-blue);
+            color: white;
+        }
+
+        /* Synergy Matrix */
+        .synergy-matrix {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .synergy-item {
+            padding: 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 0.5rem;
+            background: var(--card-bg);
+        }
+
+        .synergy-title {
+            font-weight: 700;
+            color: var(--primary-blue);
+            margin-bottom: 0.5rem;
+        }
+
+        .synergy-connections {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <nav class="top-navbar">
+        <div class="navbar-brand">
+            <span class="logo">🎯</span>
+            <span class="title">IMC E1上市策略仪表盘</span>
+        </div>
+        <ul class="nav-menu">
+            <li><a onclick="showPage('overview')" class="nav-link active" id="nav-overview">📊 总览</a></li>
+            <li><a onclick="showPage('segments')" class="nav-link" id="nav-segments">🎯 板块</a></li>
+            <li><a onclick="showPage('synergy')" class="nav-link" id="nav-synergy">🔗 协同</a></li>
+            <li><a onclick="showPage('progress')" class="nav-link" id="nav-progress">📈 进度</a></li>
+        </ul>
+        <div class="project-status">
+            <span class="current-week">第5周/共22周</span>
+            <span class="last-update">更新：2025-11-18 07:40</span>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Overview Page -->
+        <div id="overview-page" class="page active">
+            <h1 class="card-title">📊 项目总览</h1>
+
+            <div class="card">
+                <div class="card-header">🎯 项目关键信息</div>
+                <table>
+                    <tr>
+                        <th>维度</th>
+                        <th>信息</th>
+                    </tr>
+                    <tr>
+                        <td><strong>项目名称</strong></td>
+                        <td>17E1（Anker SOLIX E10）全屋备电系统上市发布</td>
+                    </tr>
+                    <tr>
+                        <td><strong>项目周期</strong></td>
+                        <td>2025年12月 - 2026年4月（5个月）</td>
+                    </tr>
+                    <tr>
+                        <td><strong>发布会时间</strong></td>
+                        <td>2026年1月12日（周一）上午10:00 AM PT</td>
+                    </tr>
+                    <tr>
+                        <td><strong>总预算</strong></td>
+                        <td>$420万</td>
+                    </tr>
+                    <tr>
+                        <td><strong>核心投入</strong></td>
+                        <td>明星代言$80-85万 | 媒体投放$210万 | 红人测评和安装$100万 | BGC和明星内容制作$30万</td>
+                    </tr>
+                    <tr>
+                        <td><strong>目标受众</strong></td>
+                        <td>30-65岁男性房主，高净值人群，德州/佛州/加州等高停电区</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="card">
+                <div class="card-header">💡 核心战略</div>
+                <p style="font-size: 1.25rem; font-weight: 600; padding: 1rem; background: var(--light-bg); border-radius: 0.5rem; border-left: 4px solid var(--primary-teal);">
+                    <strong>"Infinite Power, Uncompromised Living"</strong> - 通过"油电之争"话题引爆，揭晓光-电-油三合一增程技术的"第三条道路"，借助体育明星代言和学术机构背书实现品牌势能跃迁，确立全屋备电新时代领导者地位。
+                </p>
+            </div>
+
+            <div class="card">
+                <div class="card-header">🎯 核心目标体系</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>目标维度</th>
+                            <th>具体指标</th>
+                            <th>达成策略</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>声量目标</strong></td>
+                            <td>发布会10万+观看 | PR SOV NO.1 | 传播触达200M+</td>
+                            <td>油电之争话题PK + Troy Aikman代言 + 权威背书</td>
+                        </tr>
+                        <tr>
+                            <td><strong>生意目标</strong></td>
+                            <td>DTC预热页300K Sessions | 预热期30K Sign-Up</td>
+                            <td>预热互动 + 预售code + 首销转化</td>
+                        </tr>
+                        <tr>
+                            <td><strong>品牌目标</strong></td>
+                            <td>从户储领导者到全屋备电开创者</td>
+                            <td>增程技术首创 + "第三条道路"定位</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="grid grid-3">
+                <div class="stat-card">
+                    <div class="stat-label">总预算</div>
+                    <div class="stat-value">$420万</div>
+                    <div class="stat-label">美元</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">目标触达</div>
+                    <div class="stat-value">200M+</div>
+                    <div class="stat-label">人次</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">发布会观看目标</div>
+                    <div class="stat-value">10万+</div>
+                    <div class="stat-label">人次</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">🏥 当前项目健康度仪表盘</div>
+                <div class="health-grid">
+                    <div class="health-card healthy">
+                        <div class="status-indicator">
+                            <span class="status-dot green"></span>
+                            <span><strong>健康</strong></span>
+                        </div>
+                        <div class="health-percent">~30%</div>
+                        <p style="font-size: 0.875rem; margin-top: 0.5rem;">产品FABE完成、工厂Tour完成、六视图完成</p>
+                        <div class="badge badge-success">低风险</div>
+                    </div>
+                    <div class="health-card attention">
+                        <div class="status-indicator">
+                            <span class="status-dot yellow"></span>
+                            <span><strong>需关注</strong></span>
+                        </div>
+                        <div class="health-percent">~50%</div>
+                        <p style="font-size: 0.875rem; margin-top: 0.5rem;">DTC落地页设计中、Social KSP制作中、PR/KOL推进中</p>
+                        <div class="badge badge-warning">中风险</div>
+                    </div>
+                    <div class="health-card risk">
+                        <div class="status-indicator">
+                            <span class="status-dot red"></span>
+                            <span><strong>高风险</strong></span>
+                        </div>
+                        <div class="health-percent">~20%</div>
+                        <p style="font-size: 0.875rem; margin-top: 0.5rem;">Troy合作未最终签约、发布会未启动、时间线紧张</p>
+                        <div class="badge badge-danger">高风险</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">⚠️ 关键风险识别</div>
+                <div style="margin-top: 1rem;">
+                    <h3 style="color: var(--danger-red); margin-bottom: 0.5rem;">🔴 高风险（需立即行动）</h3>
+                    <ul style="margin-left: 1.5rem; margin-bottom: 1rem;">
+                        <li><strong>时间线极度紧张</strong>：距发布会仅剩<2个月，核心素材制作时间窗口紧迫</li>
+                        <li><strong>Troy Aikman合作待最终确认</strong>：$800K预算项目需本周敲定以便12月拍摄</li>
+                        <li><strong>发布会项目待启动</strong>：制作团队Brief和Rundown最终版需立即推进</li>
+                    </ul>
+                    <h3 style="color: var(--warning-yellow); margin-bottom: 0.5rem;">🟡 中风险（持续跟进）</h3>
+                    <ul style="margin-left: 1.5rem;">
+                        <li>DTC落地页依赖链阻塞（66天延期预警）</li>
+                        <li>KOL Debate录制时间窗口紧迫（需12月第一周完成）</li>
+                        <li>多个Listing项目依赖主页创意敲定</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">📋 本周必须完成（Week of 11/18）</div>
+                <div style="margin-top: 1rem;">
+                    <div style="padding: 0.75rem; background: var(--light-bg); border-left: 4px solid var(--danger-red); margin-bottom: 0.5rem;">
+                        ⚠️ <strong>Troy Aikman合作协议最终确认</strong>（预算close to $800K）
+                    </div>
+                    <div style="padding: 0.75rem; background: var(--light-bg); border-left: 4px solid var(--danger-red); margin-bottom: 0.5rem;">
+                        ⚠️ <strong>DTC主页设计方案锁定</strong>（解除后续依赖链）
+                    </div>
+                    <div style="padding: 0.75rem; background: var(--light-bg); border-left: 4px solid var(--danger-red); margin-bottom: 0.5rem;">
+                        ⚠️ <strong>发布会项目正式启动</strong>（Brief制作团队）
+                    </div>
+                    <div style="padding: 0.75rem; background: var(--light-bg); border-left: 4px solid var(--danger-red);">
+                        ⚠️ <strong>KOL录制时间表确认</strong>（12月第一周执行）
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Segments Page -->
+        <div id="segments-page" class="page">
+            <h1 class="card-title">🎯 营销板块 × 时间轴矩阵</h1>
+
+            <div class="card">
+                <div style="overflow-x: auto;">
+                    <table class="segment-timeline-matrix">
+                        <thead>
+                            <tr>
+                                <th style="min-width: 150px; position: sticky; left: 0; background: var(--solix-gradient); z-index: 10;">营销板块</th>
+                                <th style="min-width: 200px; background: rgba(0, 212, 170, 0.15);">准备期<br><small>11-12月</small></th>
+                                <th style="min-width: 220px; background: rgba(0, 180, 219, 0.15);">预热期<br><small>12/1-1/11（42天）</small></th>
+                                <th style="min-width: 200px; background: rgba(0, 212, 170, 0.25);">上市期<br><small>1/12-2/8（28天）</small></th>
+                                <th style="min-width: 200px; background: rgba(0, 180, 219, 0.1);">持续期<br><small>2/9-4/30（81天）</small></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- 整合营销板块 -->
+                            <tr>
+                                <td style="position: sticky; left: 0; background: white; font-weight: 700; z-index: 5;">
+                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <span style="font-size: 1.5rem;">🎯</span>
+                                        <div>
+                                            <div>整合营销</div>
+                                            <small style="color: var(--text-secondary); font-weight: 400;">预算：$500万</small>
+                                            <div style="margin-top: 0.5rem; padding: 0.5rem; background: rgba(0, 212, 170, 0.1); border-radius: 0.25rem; font-weight: 400; font-size: 0.8125rem;">
+                                                <strong style="color: var(--primary-teal);">📊 目标</strong><br>
+                                                <span style="color: var(--text-primary);">触达200M+ | Sign-Up 30K | DTC Sessions 300K</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="matrix-cell">
+                                    <div class="action-item">IMC总体策略制定</div>
+                                    <div class="action-item">预算分配与审批</div>
+                                    <div class="action-item">KPI体系搭建</div>
+                                </td>
+                                <td class="matrix-cell">
+                                    <div class="action-item">话题营销统筹</div>
+                                    <div class="action-item">DTC预热页监控</div>
+                                    <div class="action-item">跨板块协调</div>
+                                </td>
+                                <td class="matrix-cell">
+                                    <div class="action-item">发布会统筹执行</div>
+                                    <div class="action-item">实时数据监控</div>
+                                    <div class="action-item">快速响应优化</div>
+                                </td>
+                                <td class="matrix-cell">
+                                    <div class="action-item">长期效果评估</div>
+                                    <div class="action-item">复盘报告输出</div>
+                                    <div class="action-item">下一代产品筹备</div>
+                                </td>
+                            </tr>
+
+                            <!-- 发布会传播板块 -->
+                            <tr>
+                                <td style="position: sticky; left: 0; background: white; font-weight: 700; z-index: 5;">
+                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <span style="font-size: 1.5rem;">🎬</span>
+                                        <div>
+                                            <div>发布会传播</div>
+                                            <small style="color: var(--text-secondary); font-weight: 400;">1/12发布会</small>
+                                            <div style="margin-top: 0.5rem; padding: 0.5rem; background: rgba(0, 212, 170, 0.1); border-radius: 0.25rem; font-weight: 400; font-size: 0.8125rem;">
+                                                <strong style="color: var(--primary-teal);">📊 目标</strong><br>
+                                                <span style="color: var(--text-primary);">直播观看10万+ | 精华视频播放50万+</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="matrix-cell">
+                                    <div class="action-item">Rundown脚本撰写</div>
+                                    <div class="action-item">素材拍摄（Troy/KOL）</div>
+                                    <div class="action-item">视频剪辑制作</div>
+                                    <div class="action-item">舞台视觉设计</div>
+                                </td>
+                                <td class="matrix-cell">
+                                    <div class="action-item">预告片投放</div>
+                                    <div class="action-item">倒计时造势</div>
+                                    <div class="action-item">订阅引流（EDM）</div>
+                                </td>
+                                <td class="matrix-cell highlight">
+                                    <div class="action-item priority">1/12发布会直播</div>
+                                    <div class="action-item">精华剪辑传播</div>
+                                    <div class="action-item">话题发酵引导</div>
+                                </td>
+                                <td class="matrix-cell">
+                                    <div class="action-item">数据复盘分析</div>
+                                    <div class="action-item">长尾内容输出</div>
+                                </td>
+                            </tr>
+
+                            <!-- 明星营销板块 -->
+                            <tr>
+                                <td style="position: sticky; left: 0; background: white; font-weight: 700; z-index: 5;">
+                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <span style="font-size: 1.5rem;">⭐</span>
+                                        <div>
+                                            <div>明星营销</div>
+                                            <small style="color: var(--text-secondary); font-weight: 400;">Troy Aikman</small>
+                                            <div style="margin-top: 0.5rem; padding: 0.5rem; background: rgba(0, 212, 170, 0.1); border-radius: 0.25rem; font-weight: 400; font-size: 0.8125rem;">
+                                                <strong style="color: var(--primary-teal);">📊 目标</strong><br>
+                                                <span style="color: var(--text-primary);">Troy内容曝光80M+ | 代言话题Top3</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="matrix-cell">
+                                    <div class="action-item urgent">⚠️ 合作协议签署</div>
+                                    <div class="action-item">KV拍摄（12/2-8）</div>
+                                    <div class="action-item">TVC拍摄</div>
+                                    <div class="action-item">符号系统设计（#8=∞）</div>
+                                </td>
+                                <td class="matrix-cell">
+                                    <div class="action-item">身份线索预热</div>
+                                    <div class="action-item">猜测互动活动</div>
+                                    <div class="action-item">Teaser视频投放</div>
+                                </td>
+                                <td class="matrix-cell highlight">
+                                    <div class="action-item priority">发布会代言人揭晓</div>
+                                    <div class="action-item">社媒官宣扩散</div>
+                                    <div class="action-item">超级碗直播活动</div>
+                                </td>
+                                <td class="matrix-cell">
+                                    <div class="action-item">公益活动（儿童医院）</div>
+                                    <div class="action-item">深度故事传播</div>
+                                    <div class="action-item">签名周边营销</div>
+                                </td>
+                            </tr>
+
+                            <!-- 红人测评板块 -->
+                            <tr>
+                                <td style="position: sticky; left: 0; background: white; font-weight: 700; z-index: 5;">
+                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <span style="font-size: 1.5rem;">🎥</span>
+                                        <div>
+                                            <div>红人测评</div>
+                                            <small style="color: var(--text-secondary); font-weight: 400;">多层级KOL</small>
+                                            <div style="margin-top: 0.5rem; padding: 0.5rem; background: rgba(0, 212, 170, 0.1); border-radius: 0.25rem; font-weight: 400; font-size: 0.8125rem;">
+                                                <strong style="color: var(--primary-teal);">📊 目标</strong><br>
+                                                <span style="color: var(--text-primary);">KOL视频40+ | 总播放量60M+</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="matrix-cell">
+                                    <div class="action-item">KOL清单确认</div>
+                                    <div class="action-item">Debate录制（12/2-8）</div>
+                                    <div class="action-item">样机寄送</div>
+                                </td>
+                                <td class="matrix-cell">
+                                    <div class="action-item">油电之争视频发布</div>
+                                    <div class="action-item">观点对立PK</div>
+                                    <div class="action-item">投票引流DTC</div>
+                                    <div class="action-item">开箱视频预热</div>
+                                </td>
+                                <td class="matrix-cell">
+                                    <div class="action-item">真实测评视频发布</div>
+                                    <div class="action-item">家庭场景展示</div>
+                                    <div class="action-item">装机方案对比</div>
+                                </td>
+                                <td class="matrix-cell">
+                                    <div class="action-item">Beta用户UGC</div>
+                                    <div class="action-item">口碑持续传播</div>
+                                    <div class="action-item">长测视频输出</div>
+                                </td>
+                            </tr>
+
+                            <!-- 公关传播板块 -->
+                            <tr>
+                                <td style="position: sticky; left: 0; background: white; font-weight: 700; z-index: 5;">
+                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <span style="font-size: 1.5rem;">📰</span>
+                                        <div>
+                                            <div>公关传播</div>
+                                            <small style="color: var(--text-secondary); font-weight: 400;">SOV NO.1</small>
+                                            <div style="margin-top: 0.5rem; padding: 0.5rem; background: rgba(0, 212, 170, 0.1); border-radius: 0.25rem; font-weight: 400; font-size: 0.8125rem;">
+                                                <strong style="color: var(--primary-teal);">📊 目标</strong><br>
+                                                <span style="color: var(--text-primary);">PR SOV NO.1 | 新闻报道200+ | Tier-1媒体30+</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="matrix-cell">
+                                    <div class="action-item">新闻稿撰写</div>
+                                    <div class="action-item">权威机构合作（Caltech）</div>
+                                    <div class="action-item">媒体清单准备</div>
+                                </td>
+                                <td class="matrix-cell">
+                                    <div class="action-item">预热新闻释放</div>
+                                    <div class="action-item">学术背书预热</div>
+                                    <div class="action-item">技术创新报道</div>
+                                </td>
+                                <td class="matrix-cell highlight">
+                                    <div class="action-item priority">发布会新闻稿分发</div>
+                                    <div class="action-item">Troy代言话题扩散</div>
+                                    <div class="action-item">品类开创者定位</div>
+                                    <div class="action-item">SOV监测优化</div>
+                                </td>
+                                <td class="matrix-cell">
+                                    <div class="action-item">长期PR维护</div>
+                                    <div class="action-item">行业奖项申报</div>
+                                    <div class="action-item">深度报道跟进</div>
+                                </td>
+                            </tr>
+
+                            <!-- 媒体传播板块 -->
+                            <tr>
+                                <td style="position: sticky; left: 0; background: white; font-weight: 700; z-index: 5;">
+                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <span style="font-size: 1.5rem;">📺</span>
+                                        <div>
+                                            <div>媒体传播</div>
+                                            <small style="color: var(--text-secondary); font-weight: 400;">预算：$309万</small>
+                                            <div style="margin-top: 0.5rem; padding: 0.5rem; background: rgba(0, 212, 170, 0.1); border-radius: 0.25rem; font-weight: 400; font-size: 0.8125rem;">
+                                                <strong style="color: var(--primary-teal);">📊 目标</strong><br>
+                                                <span style="color: var(--text-primary);">触达150M+ | CTR 2.5%+ | CPA $80以内</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="matrix-cell">
+                                    <div class="action-item">媒体策略制定</div>
+                                    <div class="action-item">受众画像分析</div>
+                                    <div class="action-item">预算分配规划</div>
+                                </td>
+                                <td class="matrix-cell">
+                                    <div class="action-item">话题内容投放</div>
+                                    <div class="action-item">KOL视频扩散</div>
+                                    <div class="action-item">预热页引流</div>
+                                    <div class="action-item">发布会订阅转化</div>
+                                </td>
+                                <td class="matrix-cell">
+                                    <div class="action-item">发布会直播推广</div>
+                                    <div class="action-item">预售转化投放</div>
+                                    <div class="action-item">Troy内容投流</div>
+                                    <div class="action-item">超级碗借势</div>
+                                </td>
+                                <td class="matrix-cell">
+                                    <div class="action-item">持续投放优化</div>
+                                    <div class="action-item">长尾转化维持</div>
+                                    <div class="action-item">再营销策略</div>
+                                </td>
+                            </tr>
+
+                            <!-- 数字营销板块 -->
+                            <tr>
+                                <td style="position: sticky; left: 0; background: white; font-weight: 700; z-index: 5;">
+                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <span style="font-size: 1.5rem;">📱</span>
+                                        <div>
+                                            <div>数字营销（SCC）</div>
+                                            <small style="color: var(--text-secondary); font-weight: 400;">社媒全平台</small>
+                                            <div style="margin-top: 0.5rem; padding: 0.5rem; background: rgba(0, 212, 170, 0.1); border-radius: 0.25rem; font-weight: 400; font-size: 0.8125rem;">
+                                                <strong style="color: var(--primary-teal);">📊 目标</strong><br>
+                                                <span style="color: var(--text-primary);">内容发布150+ | 互动量500K+ | 粉丝增长20K</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="matrix-cell">
+                                    <div class="action-item">内容日历规划</div>
+                                    <div class="action-item">KSP素材制作</div>
+                                    <div class="action-item">视频批量生产</div>
+                                </td>
+                                <td class="matrix-cell">
+                                    <div class="action-item">油电之争话题发起</div>
+                                    <div class="action-item">投票互动运营</div>
+                                    <div class="action-item">战队PK内容</div>
+                                    <div class="action-item">倒计时系列Post</div>
+                                </td>
+                                <td class="matrix-cell">
+                                    <div class="action-item">发布会实时转播</div>
+                                    <div class="action-item">KSP教育内容</div>
+                                    <div class="action-item">场景化种草</div>
+                                    <div class="action-item">超级碗直播互动</div>
+                                </td>
+                                <td class="matrix-cell">
+                                    <div class="action-item">UGC内容激励</div>
+                                    <div class="action-item">社群深度运营</div>
+                                    <div class="action-item">用户故事传播</div>
+                                </td>
+                            </tr>
+
+                            <!-- EDM/APP/SMS板块 -->
+                            <tr>
+                                <td style="position: sticky; left: 0; background: white; font-weight: 700; z-index: 5;">
+                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <span style="font-size: 1.5rem;">📧</span>
+                                        <div>
+                                            <div>EDM/APP/SMS</div>
+                                            <small style="color: var(--text-secondary); font-weight: 400;">7波次推送</small>
+                                            <div style="margin-top: 0.5rem; padding: 0.5rem; background: rgba(0, 212, 170, 0.1); border-radius: 0.25rem; font-weight: 400; font-size: 0.8125rem;">
+                                                <strong style="color: var(--primary-teal);">📊 目标</strong><br>
+                                                <span style="color: var(--text-primary);">Open Rate 35%+ | CTR 8%+ | 转化率12%+</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="matrix-cell">
+                                    <div class="action-item">邮件模板设计</div>
+                                    <div class="action-item">用户分层策略</div>
+                                    <div class="action-item">自动化流程搭建</div>
+                                </td>
+                                <td class="matrix-cell">
+                                    <div class="action-item">EDM #1: 话题上线（1/1）</div>
+                                    <div class="action-item">EDM #2: 品类教育（1/4）</div>
+                                    <div class="action-item">EDM #3: 战队分组（1/6）</div>
+                                    <div class="action-item">EDM #4: 发布会CTA（1/9）</div>
+                                </td>
+                                <td class="matrix-cell">
+                                    <div class="action-item">EDM #5&6: 预售code（1/12）</div>
+                                    <div class="action-item">EDM #7: 老用户升级（1/16）</div>
+                                    <div class="action-item">SMS催单提醒</div>
+                                    <div class="action-item">Last Call推送（2/2）</div>
+                                </td>
+                                <td class="matrix-cell">
+                                    <div class="action-item">首销倒计时（3/6）</div>
+                                    <div class="action-item">用户培育序列</div>
+                                    <div class="action-item">复购引导EDM</div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top: 1.5rem;">
+                <div class="card-header">关键说明</div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                    <div style="padding: 0.75rem; background: #fef3c7; border-radius: 0.5rem; border-left: 4px solid var(--warning-yellow);">
+                        <strong>🟡 高亮单元格</strong>
+                        <p style="font-size: 0.875rem; margin-top: 0.25rem;">核心营销时刻</p>
+                    </div>
+                    <div style="padding: 0.75rem; background: #fee2e2; border-radius: 0.5rem; border-left: 4px solid var(--danger-red);">
+                        <strong>🔴 紧急动作</strong>
+                        <p style="font-size: 0.875rem; margin-top: 0.25rem;">需立即执行</p>
+                    </div>
+                    <div style="padding: 0.75rem; background: rgba(0, 180, 219, 0.15); border-radius: 0.5rem; border-left: 4px solid var(--primary-teal);">
+                        <strong>🔵 常规动作</strong>
+                        <p style="font-size: 0.875rem; margin-top: 0.25rem;">按计划推进</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Progress Page -->
+        <div id="progress-page" class="page">
+            <h1 class="card-title">📈 项目进度追踪</h1>
+
+            <div class="card">
+                <div class="card-header">KPI指标完成进度</div>
+                <table class="kpi-table">
+                    <thead>
+                        <tr>
+                            <th>KPI类型</th>
+                            <th>具体指标</th>
+                            <th>目标值</th>
+                            <th>当前进度</th>
+                            <th>达成路径</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>发布会曝光</strong></td>
+                            <td>观看人次</td>
+                            <td>10万+</td>
+                            <td>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 0%;">0%</div>
+                                </div>
+                            </td>
+                            <td>话题预热+KOL引流+付费推广</td>
+                        </tr>
+                        <tr>
+                            <td><strong>DTC流量</strong></td>
+                            <td>Sessions</td>
+                            <td>300,000</td>
+                            <td>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 0%;">0%</div>
+                                </div>
+                            </td>
+                            <td>预热页互动+发布会引流+媒体投放</td>
+                        </tr>
+                        <tr>
+                            <td><strong>PR声量</strong></td>
+                            <td>SOV份额</td>
+                            <td>NO.1（超越EcoFlow）</td>
+                            <td>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 15%;">15%</div>
+                                </div>
+                            </td>
+                            <td>新闻稿发布+权威背书+代言人话题</td>
+                        </tr>
+                        <tr>
+                            <td><strong>传播触达</strong></td>
+                            <td>Reach</td>
+                            <td>200M人次</td>
+                            <td>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 0%;">0%</div>
+                                </div>
+                            </td>
+                            <td>付费媒体$309W+KOL扩散+社媒传播</td>
+                        </tr>
+                        <tr>
+                            <td><strong>预热互动</strong></td>
+                            <td>Sign-Up投票</td>
+                            <td>30,000</td>
+                            <td>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 0%;">0%</div>
+                                </div>
+                            </td>
+                            <td>争议话题+投票机制+福利激励</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card">
+                <div class="card-header">各板块执行进度</div>
+                <div style="margin-top: 1rem;">
+                    <div style="margin-bottom: 1.5rem;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span><strong>🎯 整合营销板块</strong></span>
+                            <span>40%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 40%;">40%</div>
+                        </div>
+                        <p style="font-size: 0.875rem; color: var(--text-secondary); margin-top: 0.25rem;">
+                            策略完成，执行推进中
+                        </p>
+                    </div>
+
+                    <div style="margin-bottom: 1.5rem;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span><strong>🎬 发布会传播板块</strong></span>
+                            <span>25%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 25%; background: linear-gradient(90deg, var(--danger-red), var(--warning-yellow));">25%</div>
+                        </div>
+                        <p style="font-size: 0.875rem; color: var(--danger-red); margin-top: 0.25rem;">
+                            ⚠️ 待启动，时间紧迫
+                        </p>
+                    </div>
+
+                    <div style="margin-bottom: 1.5rem;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span><strong>⭐ 明星营销板块</strong></span>
+                            <span>20%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 20%; background: linear-gradient(90deg, var(--danger-red), var(--warning-yellow));">20%</div>
+                        </div>
+                        <p style="font-size: 0.875rem; color: var(--danger-red); margin-top: 0.25rem;">
+                            ⚠️ Troy合作待最终签约
+                        </p>
+                    </div>
+
+                    <div style="margin-bottom: 1.5rem;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span><strong>🎥 红人测评板块</strong></span>
+                            <span>35%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 35%;">35%</div>
+                        </div>
+                        <p style="font-size: 0.875rem; color: var(--text-secondary); margin-top: 0.25rem;">
+                            KOL确认中，12月第一周录制
+                        </p>
+                    </div>
+
+                    <div style="margin-bottom: 1.5rem;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span><strong>📰 公关传播板块</strong></span>
+                            <span>30%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 30%;">30%</div>
+                        </div>
+                        <p style="font-size: 0.875rem; color: var(--text-secondary); margin-top: 0.25rem;">
+                            策略制定中，待执行
+                        </p>
+                    </div>
+
+                    <div style="margin-bottom: 1.5rem;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span><strong>📺 媒体传播板块</strong></span>
+                            <span>30%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 30%;">30%</div>
+                        </div>
+                        <p style="font-size: 0.875rem; color: var(--text-secondary); margin-top: 0.25rem;">
+                            预算规划完成，待投放执行
+                        </p>
+                    </div>
+
+                    <div style="margin-bottom: 1.5rem;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span><strong>📱 数字营销板块（SCC）</strong></span>
+                            <span>50%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 50%; background: linear-gradient(90deg, var(--success-green), var(--primary-blue));">50%</div>
+                        </div>
+                        <p style="font-size: 0.875rem; color: var(--success-green); margin-top: 0.25rem;">
+                            ✓ 内容规划完成，素材制作中
+                        </p>
+                    </div>
+
+                    <div style="margin-bottom: 1.5rem;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span><strong>📧 EDM/APP/SMS板块</strong></span>
+                            <span>40%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 40%;">40%</div>
+                        </div>
+                        <p style="font-size: 0.875rem; color: var(--text-secondary); margin-top: 0.25rem;">
+                            7波次策略规划完成，待开发执行
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">关键交付物状态</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>交付物</th>
+                            <th>负责方</th>
+                            <th>截止时间</th>
+                            <th>状态</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Troy Aikman合作协议</td>
+                            <td>BM Team</td>
+                            <td>11/18-11/22</td>
+                            <td><span class="badge badge-danger">待签约</span></td>
+                        </tr>
+                        <tr>
+                            <td>DTC主页设计方案</td>
+                            <td>Design Team</td>
+                            <td>11/18-11/22</td>
+                            <td><span class="badge badge-warning">设计中</span></td>
+                        </tr>
+                        <tr>
+                            <td>发布会Rundown终版</td>
+                            <td>PM Team</td>
+                            <td>12/9-12/15</td>
+                            <td><span class="badge badge-warning">进行中</span></td>
+                        </tr>
+                        <tr>
+                            <td>Troy KV拍摄</td>
+                            <td>外部制作公司</td>
+                            <td>12/2-12/8</td>
+                            <td><span class="badge badge-danger">待启动</span></td>
+                        </tr>
+                        <tr>
+                            <td>KOL Debate录制</td>
+                            <td>KOL Team</td>
+                            <td>12/2-12/8</td>
+                            <td><span class="badge badge-danger">待启动</span></td>
+                        </tr>
+                        <tr>
+                            <td>Social KSP最终交付</td>
+                            <td>Design Team</td>
+                            <td>12/16-12/22</td>
+                            <td><span class="badge badge-warning">进行中</span></td>
+                        </tr>
+                        <tr>
+                            <td>DTC预热页上线</td>
+                            <td>Tech Team</td>
+                            <td>12/23-12/31</td>
+                            <td><span class="badge badge-warning">开发中</span></td>
+                        </tr>
+                        <tr>
+                            <td>发布会完整视频</td>
+                            <td>后期团队</td>
+                            <td>12/23-12/31</td>
+                            <td><span class="badge badge-danger">待启动</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Synergy Page -->
+        <div id="synergy-page" class="page">
+            <h1 class="card-title">🔗 板块协同关系</h1>
+
+            <div class="card">
+                <div class="card-header">核心协同策略</div>
+                <p style="font-size: 1.1rem; line-height: 1.8; padding: 1rem; background: var(--light-bg); border-radius: 0.5rem;">
+                    IMC E1项目采用<strong>"中心辐射式"</strong>协同模式，以<strong>发布会</strong>为核心节点，<strong>Troy Aikman代言</strong>为情感纽带，<strong>"油电之争"话题</strong>为传播主线，串联8大营销板块，形成声量、互动、转化的闭环。
+                </p>
+            </div>
+
+            <div class="card">
+                <div class="card-header">三大协同时刻</div>
+                <div style="margin-top: 1rem;">
+                    <div style="padding: 1.5rem; background: var(--light-bg); border-radius: 0.5rem; border-left: 4px solid var(--primary-blue); margin-bottom: 1rem;">
+                        <h3 style="color: var(--primary-blue); margin-bottom: 0.5rem;">🔥 协同时刻1：话题引爆期（1/1-1/11）</h3>
+                        <p><strong>核心动作：</strong>"油电之争"话题上线</p>
+                        <p><strong>协同板块：</strong></p>
+                        <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
+                            <li><strong>KOL板块：</strong>油机派 vs 新能源派，录制Debate视频，在X/Facebook发布观点</li>
+                            <li><strong>SCC板块：</strong>转发KOL内容，发起投票，制造#TeamGas vs #TeamBattery战队对决</li>
+                            <li><strong>EDM板块：</strong>EDM #1-3推送，引导用户投票、站队、订阅发布会</li>
+                            <li><strong>媒体板块：</strong>投放KOL Debate内容，扩大话题触达</li>
+                        </ul>
+                        <p style="margin-top: 0.5rem;"><strong>协同效果：</strong>话题热度 → Sign-Up增长 → 发布会预约</p>
+                    </div>
+
+                    <div style="padding: 1.5rem; background: var(--light-bg); border-radius: 0.5rem; border-left: 4px solid var(--primary-blue); margin-bottom: 1rem;">
+                        <h3 style="color: var(--primary-blue); margin-bottom: 0.5rem;">🎯 协同时刻2：发布会爆发日（1/12）</h3>
+                        <p><strong>核心动作：</strong>发布会举行，揭晓"第三条道路"和Troy代言</p>
+                        <p><strong>协同板块：</strong></p>
+                        <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
+                            <li><strong>发布会板块：</strong>10:00 AM PT线上直播，45分钟完整内容</li>
+                            <li><strong>明星板块：</strong>Troy Aikman正式亮相，公布代言人身份</li>
+                            <li><strong>SCC板块：</strong>实时转播、精华剪辑、话题互动</li>
+                            <li><strong>EDM板块：</strong>EDM #5&6即时发送，宣布预售code</li>
+                            <li><strong>PR板块：</strong>新闻稿同步发布，权威媒体跟进报道</li>
+                            <li><strong>媒体板块：</strong>发布会回放内容投放，精准受众触达</li>
+                        </ul>
+                        <p style="margin-top: 0.5rem;"><strong>协同效果：</strong>声量爆发 → 品牌认知建立 → 预售转化启动</p>
+                    </div>
+
+                    <div style="padding: 1.5rem; background: var(--light-bg); border-radius: 0.5rem; border-left: 4px solid var(--success-green);">
+                        <h3 style="color: var(--success-green); margin-bottom: 0.5rem;">💰 协同时刻3：首销转化期（2/5-3/6）</h3>
+                        <p><strong>核心动作：</strong>正式开售，冲击首月GMV</p>
+                        <p><strong>协同板块：</strong></p>
+                        <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
+                            <li><strong>KOL板块：</strong>真实测评视频发布，Beta用户口碑传播</li>
+                            <li><strong>SCC板块：</strong>KSP教育内容、场景化种草、用户UGC激励</li>
+                            <li><strong>EDM板块：</strong>Last Call提醒、催单、未核销code激活</li>
+                            <li><strong>媒体板块：</strong>持续投放，强化转化导向素材</li>
+                            <li><strong>PR板块：</strong>Troy公益活动报道，增强品牌好感</li>
+                        </ul>
+                        <p style="margin-top: 0.5rem;"><strong>协同效果：</strong>多触点转化 → GMV达成 → 用户沉淀</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">板块间协同关系流程图</div>
+                <p style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 1.5rem;">以下展示8大营销板块的因果流转关系，从内容生产到传播扩散，最终实现转化沉淀</p>
+
+                <!-- 阶段1：内容生产层 -->
+                <div style="margin-bottom: 2rem;">
+                    <h3 style="color: var(--primary-teal); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="background: var(--solix-gradient); color: white; padding: 0.25rem 0.75rem; border-radius: 0.5rem; font-size: 0.875rem;">阶段1</span>
+                        内容生产层
+                    </h3>
+                    <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; padding: 1.5rem; background: rgba(0, 212, 170, 0.05); border-radius: 0.75rem; border-left: 4px solid var(--primary-teal);">
+                        <div style="flex: 1; min-width: 200px; padding: 1rem; background: white; border-radius: 0.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                            <div style="font-weight: 700; color: var(--primary-teal); margin-bottom: 0.5rem;">🎯 整合营销</div>
+                            <div style="font-size: 0.875rem; color: var(--text-secondary);">制定策略 | 分配预算 | 协调板块</div>
+                        </div>
+                        <span style="font-size: 1.5rem; color: var(--primary-teal);">→</span>
+                        <div style="flex: 1; min-width: 200px; padding: 1rem; background: white; border-radius: 0.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                            <div style="font-weight: 700; color: var(--primary-teal); margin-bottom: 0.5rem;">⭐ 明星营销</div>
+                            <div style="font-size: 0.875rem; color: var(--text-secondary);">Troy拍摄KV/TVC | 品牌背书内容</div>
+                        </div>
+                        <span style="font-size: 1.5rem; color: var(--primary-teal);">→</span>
+                        <div style="flex: 1; min-width: 200px; padding: 1rem; background: white; border-radius: 0.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                            <div style="font-weight: 700; color: var(--primary-teal); margin-bottom: 0.5rem;">🎥 红人测评</div>
+                            <div style="font-size: 0.875rem; color: var(--text-secondary);">Debate录制 | 测评内容 | 口碑UGC</div>
+                        </div>
+                        <span style="font-size: 1.5rem; color: var(--primary-teal);">→</span>
+                        <div style="flex: 1; min-width: 200px; padding: 1rem; background: white; border-radius: 0.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                            <div style="font-weight: 700; color: var(--primary-teal); margin-bottom: 0.5rem;">🎬 发布会</div>
+                            <div style="font-size: 0.875rem; color: var(--text-secondary);">1/12直播 | 产品揭秘 | Troy揭晓</div>
+                        </div>
+                    </div>
+                    <div style="text-align: center; margin-top: 0.5rem; color: var(--text-secondary); font-size: 0.875rem;">
+                        <strong>因果关系：</strong>策略统筹 → 明星内容 → KOL话题 → 发布会爆发
+                    </div>
+                </div>
+
+                <!-- 阶段2：传播扩散层 -->
+                <div style="margin-bottom: 2rem;">
+                    <h3 style="color: var(--primary-blue); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="background: var(--primary-blue); color: white; padding: 0.25rem 0.75rem; border-radius: 0.5rem; font-size: 0.875rem;">阶段2</span>
+                        传播扩散层
+                    </h3>
+                    <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; padding: 1.5rem; background: rgba(0, 180, 219, 0.05); border-radius: 0.75rem; border-left: 4px solid var(--primary-blue);">
+                        <div style="flex: 1; min-width: 220px; padding: 1rem; background: white; border-radius: 0.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                            <div style="font-weight: 700; color: var(--primary-blue); margin-bottom: 0.5rem;">📱 数字营销（SCC）</div>
+                            <div style="font-size: 0.875rem; color: var(--text-secondary);">社媒发布 | 话题运营 | 实时互动</div>
+                            <div style="margin-top: 0.5rem; padding: 0.5rem; background: var(--light-bg); border-radius: 0.25rem; font-size: 0.75rem;">
+                                <strong>内容源：</strong>Troy素材、KOL内容、发布会直播
+                            </div>
+                        </div>
+                        <span style="font-size: 1.5rem; color: var(--primary-blue);">→</span>
+                        <div style="flex: 1; min-width: 220px; padding: 1rem; background: white; border-radius: 0.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                            <div style="font-weight: 700; color: var(--primary-blue); margin-bottom: 0.5rem;">📰 公关传播</div>
+                            <div style="font-size: 0.875rem; color: var(--text-secondary);">新闻稿分发 | 媒体报道 | SOV NO.1</div>
+                            <div style="margin-top: 0.5rem; padding: 0.5rem; background: var(--light-bg); border-radius: 0.25rem; font-size: 0.75rem;">
+                                <strong>内容源：</strong>发布会亮点、Troy代言、技术创新
+                            </div>
+                        </div>
+                        <span style="font-size: 1.5rem; color: var(--primary-blue);">→</span>
+                        <div style="flex: 1; min-width: 220px; padding: 1rem; background: white; border-radius: 0.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                            <div style="font-weight: 700; color: var(--primary-blue); margin-bottom: 0.5rem;">📺 媒体传播</div>
+                            <div style="font-size: 0.875rem; color: var(--text-secondary);">付费投放 | 精准触达 | 流量放大</div>
+                            <div style="margin-top: 0.5rem; padding: 0.5rem; background: var(--light-bg); border-radius: 0.25rem; font-size: 0.75rem;">
+                                <strong>投放素材：</strong>SCC内容、KOL视频、Troy素材
+                            </div>
+                        </div>
+                    </div>
+                    <div style="text-align: center; margin-top: 0.5rem; color: var(--text-secondary); font-size: 0.875rem;">
+                        <strong>因果关系：</strong>社媒互动 → 公关放大 → 媒体投流 → 声量爆发
+                    </div>
+                </div>
+
+                <!-- 阶段3：转化沉淀层 -->
+                <div style="margin-bottom: 1rem;">
+                    <h3 style="color: var(--success-green); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="background: var(--success-green); color: white; padding: 0.25rem 0.75rem; border-radius: 0.5rem; font-size: 0.875rem;">阶段3</span>
+                        转化沉淀层
+                    </h3>
+                    <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; padding: 1.5rem; background: rgba(0, 212, 170, 0.05); border-radius: 0.75rem; border-left: 4px solid var(--success-green);">
+                        <div style="flex: 1; min-width: 220px; padding: 1rem; background: white; border-radius: 0.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                            <div style="font-weight: 700; color: var(--success-green); margin-bottom: 0.5rem;">📧 EDM/APP/SMS</div>
+                            <div style="font-size: 0.875rem; color: var(--text-secondary);">7波次推送 | Sign-Up引导 | 购买转化</div>
+                            <div style="margin-top: 0.5rem; padding: 0.5rem; background: var(--light-bg); border-radius: 0.25rem; font-size: 0.75rem;">
+                                <strong>承接流量：</strong>SCC引流、媒体投放、发布会订阅
+                            </div>
+                        </div>
+                        <span style="font-size: 1.5rem; color: var(--success-green);">→</span>
+                        <div style="flex: 1; min-width: 220px; padding: 1rem; background: white; border-radius: 0.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border: 2px solid var(--success-green);">
+                            <div style="font-weight: 700; color: var(--success-green); margin-bottom: 0.5rem;">🎯 最终目标</div>
+                            <div style="font-size: 0.875rem; line-height: 1.6;">
+                                <div>✓ Sign-Up 30K</div>
+                                <div>✓ DTC Sessions 300K</div>
+                                <div>✓ 预售+首销GMV达成</div>
+                                <div>✓ 品牌认知建立</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="text-align: center; margin-top: 0.5rem; color: var(--text-secondary); font-size: 0.875rem;">
+                        <strong>因果关系：</strong>精准触达 → 引导注册 → 促进转化 → 目标达成
+                    </div>
+                </div>
+
+                <!-- 完整流程总结 -->
+                <div style="margin-top: 2rem; padding: 1.5rem; background: var(--light-bg); border-radius: 0.75rem;">
+                    <h4 style="color: var(--text-primary); margin-bottom: 1rem;">🔄 完整协同流程</h4>
+                    <div style="font-size: 0.875rem; line-height: 2; color: var(--text-primary);">
+                        <strong>整合营销统筹</strong> →
+                        <strong style="color: var(--primary-teal);">明星+KOL内容生产</strong> →
+                        <strong style="color: var(--primary-teal);">发布会引爆</strong> →
+                        <strong style="color: var(--primary-blue);">SCC+PR+媒体扩散</strong> →
+                        <strong style="color: var(--success-green);">EDM精准转化</strong> →
+                        <strong style="color: var(--success-green);">生意目标达成</strong>
+                    </div>
+                </div>
+
+                <div class="synergy-matrix" style="display: none;">
+                    <div class="synergy-item">
+                        <div class="synergy-title">🎯 整合营销板块 ← 核心枢纽</div>
+                        <p style="font-size: 0.875rem; margin-top: 0.5rem;">统筹协调所有板块，制定总体IMC策略，分配预算，监控KPI达成</p>
+                        <div class="synergy-connections">
+                            <span class="badge badge-success">→ 发布会</span>
+                            <span class="badge badge-success">→ 明星营销</span>
+                            <span class="badge badge-success">→ KOL</span>
+                            <span class="badge badge-success">→ PR</span>
+                            <span class="badge badge-success">→ 媒体</span>
+                            <span class="badge badge-success">→ SCC</span>
+                            <span class="badge badge-success">→ EDM</span>
+                        </div>
+                    </div>
+
+                    <div class="synergy-item">
+                        <div class="synergy-title">🎬 发布会传播 ← 核心节点</div>
+                        <p style="font-size: 0.875rem; margin-top: 0.5rem;">1月12日发布会是所有营销活动的高潮和汇聚点，所有板块为其蓄势</p>
+                        <div class="synergy-connections">
+                            <span class="badge badge-success">← KOL预热</span>
+                            <span class="badge badge-success">← SCC引流</span>
+                            <span class="badge badge-success">← EDM订阅</span>
+                            <span class="badge badge-success">→ PR发酵</span>
+                            <span class="badge badge-success">→ 媒体投放</span>
+                        </div>
+                    </div>
+
+                    <div class="synergy-item">
+                        <div class="synergy-title">⭐ 明星营销 ← 情感纽带</div>
+                        <p style="font-size: 0.875rem; margin-top: 0.5rem;">Troy Aikman贯穿全周期，为产品赋予情感价值和信任背书</p>
+                        <div class="synergy-connections">
+                            <span class="badge badge-success">→ 发布会揭晓</span>
+                            <span class="badge badge-success">→ SCC内容</span>
+                            <span class="badge badge-success">→ PR传播</span>
+                            <span class="badge badge-success">→ 媒体素材</span>
+                        </div>
+                    </div>
+
+                    <div class="synergy-item">
+                        <div class="synergy-title">🎥 红人测评 ← 话题发起</div>
+                        <p style="font-size: 0.875rem; margin-top: 0.5rem;">"油电之争"话题由KOL引发，为发布会预热，持续产出测评内容</p>
+                        <div class="synergy-connections">
+                            <span class="badge badge-success">→ SCC话题</span>
+                            <span class="badge badge-success">→ 发布会Debate</span>
+                            <span class="badge badge-success">→ 媒体投放素材</span>
+                            <span class="badge badge-success">→ EDM引用</span>
+                        </div>
+                    </div>
+
+                    <div class="synergy-item">
+                        <div class="synergy-title">📰 公关传播 ← 声量放大</div>
+                        <p style="font-size: 0.875rem; margin-top: 0.5rem;">将产品创新、代言人话题、发布会内容转化为权威媒体报道</p>
+                        <div class="synergy-connections">
+                            <span class="badge badge-success">← 发布会素材</span>
+                            <span class="badge badge-success">← Troy话题</span>
+                            <span class="badge badge-success">→ SCC二次传播</span>
+                            <span class="badge badge-success">→ EDM引用</span>
+                        </div>
+                    </div>
+
+                    <div class="synergy-item">
+                        <div class="synergy-title">📺 媒体传播 ← 流量引擎</div>
+                        <p style="font-size: 0.875rem; margin-top: 0.5rem;">$309万预算投放，将内容推送给精准受众，驱动流量和转化</p>
+                        <div class="synergy-connections">
+                            <span class="badge badge-success">← KOL内容投流</span>
+                            <span class="badge badge-success">← Troy素材投流</span>
+                            <span class="badge badge-success">← SCC内容投流</span>
+                            <span class="badge badge-success">→ DTC流量</span>
+                        </div>
+                    </div>
+
+                    <div class="synergy-item">
+                        <div class="synergy-title">📱 数字营销（SCC）← 内容枢纽</div>
+                        <p style="font-size: 0.875rem; margin-top: 0.5rem;">社媒全平台内容创作与发布，串联所有营销动作的社交传播</p>
+                        <div class="synergy-connections">
+                            <span class="badge badge-success">← KOL内容转发</span>
+                            <span class="badge badge-success">← Troy内容发布</span>
+                            <span class="badge badge-success">← 发布会直播</span>
+                            <span class="badge badge-success">→ 媒体投放</span>
+                            <span class="badge badge-success">→ EDM引流</span>
+                        </div>
+                    </div>
+
+                    <div class="synergy-item">
+                        <div class="synergy-title">📧 EDM/APP/SMS ← 精准转化</div>
+                        <p style="font-size: 0.875rem; margin-top: 0.5rem;">7波次精准推送，承接各板块流量，引导Sign-Up和购买转化</p>
+                        <div class="synergy-connections">
+                            <span class="badge badge-success">← SCC话题</span>
+                            <span class="badge badge-success">← 发布会订阅</span>
+                            <span class="badge badge-success">← Troy揭晓</span>
+                            <span class="badge badge-success">→ DTC转化</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">数据流转与闭环</div>
+                <div style="margin-top: 1rem; padding: 1.5rem; background: var(--light-bg); border-radius: 0.5rem;">
+                    <h4 style="margin-bottom: 1rem;">完整数据闭环：</h4>
+                    <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; font-size: 0.875rem;">
+                        <span style="padding: 0.5rem 1rem; background: white; border-radius: 0.5rem; border: 2px solid var(--primary-blue);">媒体投放</span>
+                        <span style="font-size: 1.5rem;">→</span>
+                        <span style="padding: 0.5rem 1rem; background: white; border-radius: 0.5rem; border: 2px solid var(--primary-blue);">SCC/KOL内容</span>
+                        <span style="font-size: 1.5rem;">→</span>
+                        <span style="padding: 0.5rem 1rem; background: white; border-radius: 0.5rem; border: 2px solid var(--primary-blue);">DTC预热页</span>
+                        <span style="font-size: 1.5rem;">→</span>
+                        <span style="padding: 0.5rem 1rem; background: white; border-radius: 0.5rem; border: 2px solid var(--primary-teal);">Sign-Up投票</span>
+                        <span style="font-size: 1.5rem;">→</span>
+                        <span style="padding: 0.5rem 1rem; background: white; border-radius: 0.5rem; border: 2px solid var(--primary-teal);">发布会观看</span>
+                        <span style="font-size: 1.5rem;">→</span>
+                        <span style="padding: 0.5rem 1rem; background: white; border-radius: 0.5rem; border: 2px solid var(--success-green);">预售转化</span>
+                        <span style="font-size: 1.5rem;">→</span>
+                        <span style="padding: 0.5rem 1rem; background: white; border-radius: 0.5rem; border: 2px solid var(--success-green);">首销购买</span>
+                    </div>
+                    <p style="margin-top: 1.5rem; font-size: 0.875rem; color: var(--text-secondary);">
+                        <strong>关键监测点：</strong>每个环节设置UTM追踪，实时监控转化率，优化投放策略和内容方向
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showPage(pageName) {
+            // Hide all pages
+            const pages = document.querySelectorAll('.page');
+            pages.forEach(page => page.classList.remove('active'));
+
+            // Remove active from all nav links
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(link => link.classList.remove('active'));
+
+            // Show selected page
+            document.getElementById(pageName + '-page').classList.add('active');
+
+            // Add active to clicked nav link
+            document.getElementById('nav-' + pageName).classList.add('active');
+        }
+
+        // Update current time
+        function updateTime() {
+            const now = new Date();
+            const dateStr = now.getFullYear() + '-' +
+                          String(now.getMonth() + 1).padStart(2, '0') + '-' +
+                          String(now.getDate()).padStart(2, '0') + ' ' +
+                          String(now.getHours()).padStart(2, '0') + ':' +
+                          String(now.getMinutes()).padStart(2, '0');
+            document.querySelector('.last-update').textContent = '更新：' + dateStr;
+        }
+
+        // Initialize
+        updateTime();
+        setInterval(updateTime, 60000); // Update every minute
+    </script>
+</body>
+</html>
